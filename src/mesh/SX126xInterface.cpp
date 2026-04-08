@@ -320,10 +320,19 @@ template <typename T> void SX126xInterface<T>::startReceive()
     setTransmitEnable(false);
     setStandby();
 
+    int err;
+#ifdef SX126X_FORCE_CONTINUOUS_RX
+    // Some boards can miss immediate post-TX ACKs in duty-cycle RX mode.
+    // Allow variants to force continuous RX for reliability.
+    err = lora.startReceive(RADIOLIB_SX126X_RX_TIMEOUT_INF, MESHTASTIC_RADIOLIB_IRQ_RX_FLAGS);
+    if (err != RADIOLIB_ERR_NONE)
+        LOG_ERROR("SX126X startReceive %s%d", radioLibErr, err);
+#else
     // We use a 16 bit preamble so this should save some power by letting radio sit in standby mostly.
-    int err = lora.startReceiveDutyCycleAuto(preambleLength, 8, MESHTASTIC_RADIOLIB_IRQ_RX_FLAGS);
+    err = lora.startReceiveDutyCycleAuto(preambleLength, 8, MESHTASTIC_RADIOLIB_IRQ_RX_FLAGS);
     if (err != RADIOLIB_ERR_NONE)
         LOG_ERROR("SX126X startReceiveDutyCycleAuto %s%d", radioLibErr, err);
+#endif
 #ifdef ARCH_PORTDUINO
     if (err != RADIOLIB_ERR_NONE)
         portduino_status.LoRa_in_error = true;

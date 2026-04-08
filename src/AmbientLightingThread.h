@@ -29,6 +29,7 @@ class AmbientLightingThread : public concurrency::OSThread
 {
     friend class StatusLEDModule; // Let the LEDStatusModule trigger the ambient lighting for notifications and battery status.
     friend class ExternalNotificationModule; // Let the ExternalNotificationModule trigger the ambient lighting for notifications.
+    friend class RadioLibInterface; // Let radio interface trigger short TX/RX activity flashes.
 
   private:
 #ifdef HAS_NCP5623
@@ -187,6 +188,7 @@ class AmbientLightingThread : public concurrency::OSThread
             LOG_DEBUG("Init LP5562 Ambient light w/ current=%f, red=%d, green=%d, blue=%d", current, red, green, blue);
 #endif
 #ifdef HAS_NEOPIXEL
+            pixels.setBrightness((uint8_t)current);
             pixels.fill(pixels.Color(red, green, blue), 0, NEOPIXEL_COUNT);
 
 // RadioMaster Bandit has addressable LED at the two buttons

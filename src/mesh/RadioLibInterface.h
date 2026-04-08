@@ -53,7 +53,14 @@ class STM32WLx_ModuleWrapper : public STM32WLx_Module
 class RadioLibInterface : public RadioInterface, protected concurrency::NotifiedWorkerThread
 {
     /// Used as our notification from the ISR
-    enum PendingISR { ISR_NONE = 0, ISR_RX, ISR_TX, TRANSMIT_DELAY_COMPLETED };
+    enum PendingISR {
+        ISR_NONE = 0,
+        ISR_RX,
+        ISR_TX,
+        TRANSMIT_DELAY_COMPLETED,
+        ACTIVITY_LED_TX_OFF,
+        ACTIVITY_LED_RX_OFF
+    };
 
     /**
      * Raw ISR handler that just calls our polymorphic method
@@ -192,6 +199,10 @@ class RadioLibInterface : public RadioInterface, protected concurrency::Notified
     void handleTransmitInterrupt();
     void handleReceiveInterrupt();
 
+    void pulseTxActivityLed();
+    void pulseRxActivityLed();
+    void updateActivityIndicators();
+
     static void timerCallback(void *p1, uint32_t p2);
 
     virtual void onNotify(uint32_t notification) override;
@@ -206,6 +217,8 @@ class RadioLibInterface : public RadioInterface, protected concurrency::Notified
 
   protected:
     uint32_t activeReceiveStart = 0;
+    uint32_t txLedOffAt = 0;
+    uint32_t rxLedOffAt = 0;
 
     bool receiveDetected(uint16_t irq, ulong syncWordHeaderValidFlag, ulong preambleDetectedFlag);
 

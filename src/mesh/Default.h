@@ -17,9 +17,15 @@
 #define default_gps_update_interval IF_ROUTER(ONE_DAY, 2 * 60)
 #define default_telemetry_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
 #define default_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
-#define default_broadcast_smart_minimum_interval_secs 5 * 60
+#ifndef MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
+#define MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS (5 * 60)
+#endif
+#define default_broadcast_smart_minimum_interval_secs MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
 #define min_default_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
-#define min_default_broadcast_smart_minimum_interval_secs 5 * 60
+#ifndef MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
+#define MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS (5 * 60)
+#endif
+#define min_default_broadcast_smart_minimum_interval_secs MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
 #define default_wait_bluetooth_secs IF_ROUTER(1, 60)
 #define default_sds_secs IF_ROUTER(ONE_DAY, UINT32_MAX) // Default to forever super deep sleep
 #define default_ls_secs IF_ROUTER(ONE_DAY, 5 * 60)

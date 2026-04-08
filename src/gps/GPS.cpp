@@ -530,6 +530,22 @@ bool GPS::setup()
         if (gnssModel != GNSS_MODEL_UNKNOWN) {
             setConnected();
         } else {
+#ifdef GPS_ALLOW_NMEA_FALLBACK
+#ifndef GPS_NMEA_FALLBACK_TIMEOUT_MS
+#define GPS_NMEA_FALLBACK_TIMEOUT_MS 2500
+#endif
+            // Some boards can receive NMEA but fail active probe commands.
+            // If we see valid NMEA frames, continue without model-specific init.
+            uint32_t fallbackStart = millis();
+            while ((millis() - fallbackStart) < GPS_NMEA_FALLBACK_TIMEOUT_MS) {
+                if (whileActive()) {
+                    LOG_WARN("GNSS probe failed, but valid NMEA flow detected. Continue in generic mode.");
+                    setConnected();
+                    return true;
+                }
+                delay(20);
+            }
+#endif
             return false;
         }
 

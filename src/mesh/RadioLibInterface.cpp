@@ -11,6 +11,53 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 
+#ifdef LORA_ACTIVITY_USE_NEOPIXEL
+#include "AmbientLightingThread.h"
+extern concurrency::OSThread *ambientLightingThread;
+
+#ifndef LORA_ACTIVITY_NEOPIXEL_BRIGHTNESS
+#define LORA_ACTIVITY_NEOPIXEL_BRIGHTNESS 48
+#endif
+
+#ifndef LORA_TX_NEOPIXEL_RED
+#define LORA_TX_NEOPIXEL_RED 255
+#endif
+#ifndef LORA_TX_NEOPIXEL_GREEN
+#define LORA_TX_NEOPIXEL_GREEN 0
+#endif
+#ifndef LORA_TX_NEOPIXEL_BLUE
+#define LORA_TX_NEOPIXEL_BLUE 0
+#endif
+
+#ifndef LORA_RX_NEOPIXEL_RED
+#define LORA_RX_NEOPIXEL_RED 0
+#endif
+#ifndef LORA_RX_NEOPIXEL_GREEN
+#define LORA_RX_NEOPIXEL_GREEN 255
+#endif
+#ifndef LORA_RX_NEOPIXEL_BLUE
+#define LORA_RX_NEOPIXEL_BLUE 0
+#endif
+#endif
+
+#ifndef LORA_ACTIVITY_LED_PULSE_MS
+#define LORA_ACTIVITY_LED_PULSE_MS 80
+#endif
+
+#ifndef LORA_TX_LED_STATE_ON
+#define LORA_TX_LED_STATE_ON LED_STATE_ON
+#endif
+#ifndef LORA_TX_LED_STATE_OFF
+#define LORA_TX_LED_STATE_OFF (LORA_TX_LED_STATE_ON ^ 1)
+#endif
+
+#ifndef LORA_RX_LED_STATE_ON
+#define LORA_RX_LED_STATE_ON LED_STATE_ON
+#endif
+#ifndef LORA_RX_LED_STATE_OFF
+#define LORA_RX_LED_STATE_OFF (LORA_RX_LED_STATE_ON ^ 1)
+#endif
+
 #if ARCH_PORTDUINO
 #include "PortduinoGlue.h"
 #include "meshUtils.h"
@@ -43,6 +90,16 @@ RadioLibInterface::RadioLibInterface(LockingArduinoHal *hal, RADIOLIB_PIN_TYPE c
 #if defined(ARCH_STM32WL) && defined(USE_SX1262)
     module.setCb_digitalWrite(stm32wl_emulate_digitalWrite);
     module.setCb_digitalRead(stm32wl_emulate_digitalRead);
+#endif
+
+#ifdef LORA_TX_LED
+    pinMode(LORA_TX_LED, OUTPUT);
+    digitalWrite(LORA_TX_LED, LORA_TX_LED_STATE_OFF);
+#endif
+
+#ifdef LORA_RX_LED
+    pinMode(LORA_RX_LED, OUTPUT);
+    digitalWrite(LORA_RX_LED, LORA_RX_LED_STATE_OFF);
 #endif
 }
 
@@ -298,6 +355,32 @@ void RadioLibInterface::onNotify(uint32_t notification)
             // Do nothing, because the queue is empty
         }
         break;
+    case ACTIVITY_LED_TX_OFF:
+#if defined(LORA_TX_LED) || defined(LORA_ACTIVITY_USE_NEOPIXEL)
+        if (txLedOffAt != 0) {
+            int32_t remaining = (int32_t)(txLedOffAt - millis());
+            if (remaining > 0) {
+                notifyLater((uint32_t)remaining, ACTIVITY_LED_TX_OFF, false);
+            } else {
+                txLedOffAt = 0;
+                updateActivityIndicators();
+            }
+        }
+#endif
+        break;
+    case ACTIVITY_LED_RX_OFF:
+#if defined(LORA_RX_LED) || defined(LORA_ACTIVITY_USE_NEOPIXEL)
+        if (rxLedOffAt != 0) {
+            int32_t remaining = (int32_t)(rxLedOffAt - millis());
+            if (remaining > 0) {
+                notifyLater((uint32_t)remaining, ACTIVITY_LED_RX_OFF, false);
+            } else {
+                rxLedOffAt = 0;
+                updateActivityIndicators();
+            }
+        }
+#endif
+        break;
     default:
         assert(0); // We expected to receive a valid notification from the ISR
     }
@@ -422,6 +505,70 @@ void RadioLibInterface::completeSending()
     }
 }
 
+void RadioLibInterface::updateActivityIndicators()
+{
+    const uint32_t now = millis();
+    const bool txActive = (txLedOffAt != 0) && ((int32_t)(txLedOffAt - now) > 0);
+    const bool rxActive = (rxLedOffAt != 0) && ((int32_t)(rxLedOffAt - now) > 0);
+
+#ifdef LORA_TX_LED
+    digitalWrite(LORA_TX_LED, txActive ? LORA_TX_LED_STATE_ON : LORA_TX_LED_STATE_OFF);
+#endif
+
+#ifdef LORA_RX_LED
+    digitalWrite(LORA_RX_LED, rxActive ? LORA_RX_LED_STATE_ON : LORA_RX_LED_STATE_OFF);
+#endif
+
+#ifdef LORA_ACTIVITY_USE_NEOPIXEL
+    if (ambientLightingThread) {
+        auto *ambient = static_cast<AmbientLightingThread *>(ambientLightingThread);
+
+        if (txActive || rxActive) {
+            uint16_t red = 0;
+            uint16_t green = 0;
+            uint16_t blue = 0;
+
+            if (txActive) {
+                red += LORA_TX_NEOPIXEL_RED;
+                green += LORA_TX_NEOPIXEL_GREEN;
+                blue += LORA_TX_NEOPIXEL_BLUE;
+            }
+            if (rxActive) {
+                red += LORA_RX_NEOPIXEL_RED;
+                green += LORA_RX_NEOPIXEL_GREEN;
+                blue += LORA_RX_NEOPIXEL_BLUE;
+            }
+
+            ambient->setLighting(LORA_ACTIVITY_NEOPIXEL_BRIGHTNESS, (uint8_t)min(red, (uint16_t)255),
+                                 (uint8_t)min(green, (uint16_t)255), (uint8_t)min(blue, (uint16_t)255));
+        } else if (moduleConfig.ambient_lighting.led_state) {
+            ambient->setLighting(moduleConfig.ambient_lighting.current, moduleConfig.ambient_lighting.red,
+                                 moduleConfig.ambient_lighting.green, moduleConfig.ambient_lighting.blue);
+        } else {
+            ambient->setLighting(0, 0, 0, 0);
+        }
+    }
+#endif
+}
+
+void RadioLibInterface::pulseTxActivityLed()
+{
+#if defined(LORA_TX_LED) || defined(LORA_ACTIVITY_USE_NEOPIXEL)
+    txLedOffAt = millis() + LORA_ACTIVITY_LED_PULSE_MS;
+    updateActivityIndicators();
+    notifyLater(LORA_ACTIVITY_LED_PULSE_MS, ACTIVITY_LED_TX_OFF, false);
+#endif
+}
+
+void RadioLibInterface::pulseRxActivityLed()
+{
+#if defined(LORA_RX_LED) || defined(LORA_ACTIVITY_USE_NEOPIXEL)
+    rxLedOffAt = millis() + LORA_ACTIVITY_LED_PULSE_MS;
+    updateActivityIndicators();
+    notifyLater(LORA_ACTIVITY_LED_PULSE_MS, ACTIVITY_LED_RX_OFF, false);
+#endif
+}
+
 void RadioLibInterface::handleReceiveInterrupt()
 {
     // when this is called, we should be in receive mode - if we are not, just jump out instead of bombing. Possible Race
@@ -507,6 +654,7 @@ void RadioLibInterface::handleReceiveInterrupt()
             mp->encrypted.size = payloadLen;
 
             printPacket("Lora RX", mp);
+            pulseRxActivityLed();
 
             airTime->logAirtime(RX_LOG, rxMsec);
 
@@ -583,6 +731,7 @@ bool RadioLibInterface::startSend(meshtastic_MeshPacket *txp)
             enableInterrupt(isrTxLevel0);
             lastTxStart = millis();
             printPacket("Started Tx", txp);
+            pulseTxActivityLed();
         }
 
         return res == RADIOLIB_ERR_NONE;
