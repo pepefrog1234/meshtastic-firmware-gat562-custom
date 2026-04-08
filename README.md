@@ -1,39 +1,30 @@
-<div align="center" markdown="1">
+# GAT562-30S 的開放原始碼
+## 起因
+此產品的作者中文化了韌體，但似乎沒有把中文化的韌體開源，而且僅提供硬體腳位藍圖。因此該專案分析了原始藍圖生成了對應的腳位定義檔與原作者客製化的功能，以符合開源精神。
+## 如何使用
+有兩種方法燒錄韌體：
+* 透過 vscode 開發環境編譯並燒錄
+* 直接從發佈頁面下載韌體來燒錄
+---
+燒錄方法跟一般 nRF 晶片的裝置一樣，這邊就不多敘述。
+---
 
-<img src=".github/meshtastic_logo.png" alt="Meshtastic Logo" width="80"/>
-<h1>Meshtastic Firmware</h1>
+## 注意事項
+本韌體目前有些已知問題（如下），此韌體沒有原作者招牌的中文字元，並且穩定性還在驗證階段，如果您是新手建議不要嘗試。由於可能有潛在的 Bug 可能會導致包括但不限於：
+* 裝置硬體故障
+* 韌體沒有按照預期運作
 
-![GitHub release downloads](https://img.shields.io/github/downloads/meshtastic/firmware/total)
-[![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/firmware/main_matrix.yml?branch=master&label=actions&logo=github&color=yellow)](https://github.com/meshtastic/firmware/actions/workflows/ci.yml)
-[![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/firmware)](https://cla-assistant.io/meshtastic/firmware)
-[![Fiscal Contributors](https://opencollective.com/meshtastic/tiers/badge.svg?label=Fiscal%20Contributors&color=deeppink)](https://opencollective.com/meshtastic/)
-[![Vercel](https://img.shields.io/static/v1?label=Powered%20by&message=Vercel&style=flat&logo=vercel&color=000000)](https://vercel.com?utm_source=meshtastic&utm_campaign=oss)
+如果要用在正式環境，建議進行嚴格可靠測試。
 
-<a href="https://trendshift.io/repositories/5524" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5524" alt="meshtastic%2Ffirmware | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+### 已知問題
+1. 電量錶似乎不準確
+2. 安裝此韌體機子似乎會發出異音
+3. 剛開機時操作會卡頓
+* 如有遇到其他問題，請開 issue 回報。
 
-</div>
+## 韌體特色
+主要開源此韌體為讓位置發射時間可以小於 5 分鐘，以便讓有需要回報位置需求的使用者擁有實用性。
+* 目前韌體修改為最短 30 秒發送一次訊號，請依實際需求調整發送的頻率以避免佔用網路頻寬。
 
-</div>
-
-<div align="center">
-	<a href="https://meshtastic.org">Website</a>
-	-
-	<a href="https://meshtastic.org/docs/">Documentation</a>
-</div>
-
-## Overview
-
-This repository contains the official device firmware for Meshtastic, an open-source LoRa mesh networking project designed for long-range, low-power communication without relying on internet or cellular infrastructure. The firmware supports various hardware platforms, including ESP32, nRF52, RP2040/RP2350, and Linux-based devices.
-
-Meshtastic enables text messaging, location sharing, and telemetry over a decentralized mesh network, making it ideal for outdoor adventures, emergency preparedness, and remote operations.
-
-### Get Started
-
-- 🔧 **[Building Instructions](https://meshtastic.org/docs/development/firmware/build)** – Learn how to compile the firmware from source.
-- ⚡ **[Flashing Instructions](https://meshtastic.org/docs/getting-started/flashing-firmware/)** – Install or update the firmware on your device.
-
-Join our community and help improve Meshtastic! 🚀
-
-## Stats
-
-![Alt](https://repobeats.axiom.co/api/embed/8025e56c482ec63541593cc5bd322c19d5c0bdcf.svg "Repobeats analytics image")
+## 授權
+跟官方一樣。
