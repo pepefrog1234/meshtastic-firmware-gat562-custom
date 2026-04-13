@@ -142,10 +142,6 @@ static const uint8_t SCK = PIN_SPI_SCK;
 // Broadcast reliability in Meshtastic uses implicit ACK (hearing rebroadcast).
 // Increase sender retries to improve ACK hit rate in sparse/noisy meshes.
 #define MESHTASTIC_NUM_RELIABLE_RETX 5
-// Position smart-broadcast minimum interval: lower from default 5 minutes to 30 seconds.
-#define MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS 30
-#define MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS 30
-#define MESHTASTIC_EVENT_MODE_MIN_POSITION_INTERVAL_MS 30000UL
 // #define SX126X_TXEN (39)
 // #define SX126X_RXEN (37)
 #define SX126X_POWER_EN (37)

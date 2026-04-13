@@ -18,12 +18,12 @@
 #define default_telemetry_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
 #define default_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
 #ifndef MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
-#define MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS (5 * 60)
+#define MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS 30
 #endif
 #define default_broadcast_smart_minimum_interval_secs MESHTASTIC_DEFAULT_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
 #define min_default_broadcast_interval_secs IF_ROUTER(ONE_DAY / 2, 60 * 60)
 #ifndef MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
-#define MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS (5 * 60)
+#define MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS 30
 #endif
 #define min_default_broadcast_smart_minimum_interval_secs MESHTASTIC_MIN_BROADCAST_SMART_MINIMUM_INTERVAL_SECS
 #define default_wait_bluetooth_secs IF_ROUTER(1, 60)

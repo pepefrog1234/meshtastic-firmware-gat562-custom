@@ -67,9 +67,9 @@ class PositionModule : public ProtobufModule<meshtastic_Position>, private concu
 
 #if USERPREFS_EVENT_MODE
     // In event mode we want to prevent excessive position broadcasts
-    // by default we set the minimum interval to 5m (board can override).
+    // by default we set the minimum interval to 30s (board can override).
 #ifndef MESHTASTIC_EVENT_MODE_MIN_POSITION_INTERVAL_MS
-#define MESHTASTIC_EVENT_MODE_MIN_POSITION_INTERVAL_MS 300000UL
+#define MESHTASTIC_EVENT_MODE_MIN_POSITION_INTERVAL_MS 30000UL
 #endif
     const uint32_t minimumTimeThreshold =
         max(uint32_t(MESHTASTIC_EVENT_MODE_MIN_POSITION_INTERVAL_MS),
